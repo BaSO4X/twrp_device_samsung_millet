@@ -1,6 +1,6 @@
 name: Build TWRP 7.1
 
-on:
+于:
   workflow_dispatch:
 
 jobs:
@@ -21,7 +21,7 @@ jobs:
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
           source build/envsetup.sh
           #这里我帮你后续写死机型，彻底杜绝问题
-          lunch 【你的机型】-userdebug
+          lunch millet-userdebug
           make recoveryimage -j$(nproc)
 
       - name: Upload recovery.img
