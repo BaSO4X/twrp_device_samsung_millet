@@ -1,30 +1,38 @@
 name: milllet-TWRP
-on: workflow_dispatch
+on:
+  workflow_dispatch
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     steps:
-      - name: 搭建完整TWRP7.1源码(自带envsetup)
+      - name: 适配安卓7.1依赖+降级gcc
         run: |
-          sudo apt update && sudo apt install -y git repo openjdk-8-jdk build-essential
-          mkdir twrp && cd twrp
-          repo init -b twrp-7.1 --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git
+          sudo apt update -y
+          sudo apt install -y git repo openjdk-8-jdk build-essential gcc-9 g++-9
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 90
+
+      - name: 拉取完整TWRP7.1源码(自带build/envsetup.sh)
+        run: |
+          mkdir -p twrp && cd twrp
+          repo init --depth=1 -u https://github.com/minimal-manifest-twrp/platform_manifest_twrp_omni.git -b twrp-7.1
           repo sync -j2
 
-      - name: 把你的设备配置合并进去
+      - name: 导入你的设备配置
         uses: actions/checkout@v4
         with:
           path: twrp/device/milllet
 
-      - name: 编译(此时envsetup真实存在)
+      - name: 开始编译
         run: |
           cd twrp
           source build/envsetup.sh
           lunch milllet-userdebug
           make recoveryimage -j$(nproc)
 
-      - name: 上传镜像
+      - name: 上传成品
         uses: actions/upload-artifact@v4
         with:
+          name: milllet_twrp_7.1
           path: twrp/out/target/product/milllet/recovery.img
