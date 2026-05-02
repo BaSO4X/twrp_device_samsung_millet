@@ -1,0 +1,30 @@
+name: auto build twrp
+
+on:
+  push:
+    branches: [android-7.1]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: install depends
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential bison flex zip unzip libssl-dev openjdk-8-jdk
+
+      - name: compile twrp recovery
+        run: |
+          export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+          source build/envsetup.sh
+          lunch $(ls device/*/ | head -1)-userdebug
+          make recoveryimage -j$(nproc)
+
+      - name: upload recovery
+        uses: actions/upload-artifact@v3
+        with:
+          name: twrp-recovery-7.1
+          path: out/target/product/*/recovery.img
