@@ -1,4 +1,4 @@
-name: TWRP-millet 手动编译
+name: TWRP millet Pure Build
 on:
   workflow_dispatch
 
@@ -6,37 +6,43 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     steps:
-      - name: 安装依赖 & 降级gcc适配7.1
+      - name: 安装编译依赖
         run: |
           sudo apt update -y
-          sudo apt install -y git build-essential bison flex lzop bc zip cpio openjdk-8-jdk gcc-9 g++-9
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 90
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 90
+          sudo apt install -y git build-essential bison flex lzop bc cpio zip openjdk-8-jdk gcc-9 g++-9
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 100
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-9 100
 
-      - name: 拉取 Omni 7.1 有效源码（分支100%存在）
+      - name: 建立纯净编译根目录
+        run: mkdir -p twrp && cd twrp
+
+      - name: 只拉【官方真实有效 TWRP 7.1】
         run: |
-          mkdir -p twrp
           cd twrp
-          git clone --depth=1 -b twrp-7.1 https://github.com/omnirom/android_bootable_recovery.git bootable/recovery
-          git clone --depth=1 -b android-7.1 https://github.com/omnirom/android_build.git build
-          git clone --depth=1 -b android-7.1 https://github.com/omnirom/android_vendor_omni.git vendor/omni
+          git clone --depth=1 -b android-7.1 https://github.com/TeamWin/android_bootable_recovery.git bootable/recovery
 
-      - name: 导入你的设备配置
+      - name: 拉AOSP7.1编译必需核心(仅此两个)
+        run: |
+          cd twrp
+          git clone --depth=1 -b android-7.1 https://github.com/aosp-mirror/platform_build.git build
+          git clone --depth=1 -b android-7.1 https://github.com/aosp-mirror/platform_prebuilts_build-tools.git prebuilts/build-tools
+
+      - name: 导入你的设备树
         uses: actions/checkout@v4
         with:
           path: twrp/device/millet
 
-      - name: 编译
+      - name: 编译命令完全跟随你仓库原生
         run: |
           cd twrp
           source build/envsetup.sh
           lunch omni_millet-userdebug
           make recoveryimage -j$(nproc)
 
-      - name: 上传 recovery.img
+      - name: 上传成品
         uses: actions/upload-artifact@v4
         with:
-          name: TWRP_millet_official
+          name: TWRP_millet_finish
           path: twrp/out/target/product/millet/recovery.img
 
 
