@@ -1,31 +1,30 @@
-name: Build TWRP 7.1
+name: TWRP手动编译-milllet
 
-于:
+on:
   workflow_dispatch:
 
 jobs:
   build:
-    # 换成最容易抢到的运行环境
     runs-on: ubuntu-22.04
     steps:
-      - name: Clone source
+      - name: 拉取源码
         uses: actions/checkout@v4
 
-      - name: Install compile dependencies
+      - name: 安装编译依赖
         run: |
           sudo apt update -y
-          sudo apt install -y openjdk-8-jdk build-essential bison flex zip lzop bc libssl-dev
+          sudo apt install -y openjdk-8-jdk build-essential bison flex lzop bc zip libssl-dev gnupg
 
-      - name: Compile TWRP
+      - name: 编译 TWRP
         run: |
+          export USE_CCACHE=1
           export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
           source build/envsetup.sh
-          #这里我帮你后续写死机型，彻底杜绝问题
-          lunch millet-userdebug
+          lunch milllet-userdebug
           make recoveryimage -j$(nproc)
 
-      - name: Upload recovery.img
-        uses: actions/upload-artifact@v3
+      - name: 上传成品
+        uses: actions/upload-artifact@v4
         with:
-          name: TWRP_成品
-          path: out/target/product/*/recovery.img
+          name: milllet_TWRP_7.1
+          path: out/target/product/milllet/recovery.img
